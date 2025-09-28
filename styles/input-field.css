@@ -1,0 +1,22 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+div.flex-line {
+  gap: 10px;
+}
+
+div.flex-column label {
+  align-self: flex-start;
+}
+div.flex-line label {
+  align-self: center;
+}
+
+input {
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  flex-grow: 1;
+  text-align: center;
+}

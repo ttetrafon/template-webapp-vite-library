@@ -1,0 +1,30 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+#svg-container {
+  height: 100%;
+  aspect-ratio: 1;
+  border-radius: 25%;
+  justify-content: center;
+}
+
+svg {
+  height: 100%;
+  aspect-ratio: 1;
+}
+
+path {
+  fill: var(--colour-quaternary);
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+@media (prefers-color-scheme: light) {
+  path {
+    fill: var(--colour-primary);
+  }
+}

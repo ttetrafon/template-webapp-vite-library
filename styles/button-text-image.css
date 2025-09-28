@@ -1,0 +1,21 @@
+:host {
+  display: block;
+  height: auto;
+}
+
+button {
+  height: 100%;
+  gap: 3px;
+  align-items: center;
+  padding: 3px;
+}
+
+svg-wrapper {
+  height: 100%;
+  white-space: nowrap;
+}
+
+span {
+  flex-grow: 1;
+  text-align: left;
+}

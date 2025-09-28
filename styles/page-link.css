@@ -1,0 +1,14 @@
+:host {
+  display: block;
+}
+
+a {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: 4px;
+  align-items: center;
+}
+
+svg-wrapper {
+  height: 1em;
+}

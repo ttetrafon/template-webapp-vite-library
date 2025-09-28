@@ -1,1 +1,1 @@
-# template-webapp-vite-library
+# Template Webapp Vite Library

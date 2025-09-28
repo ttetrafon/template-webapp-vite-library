@@ -1,0 +1,39 @@
+.spinner-parent {
+  position: fixed;
+  background-color: var(--colour-tertiary-a);
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+}
+
+.spinner {
+  z-index: 999;
+}
+
+#spinner::before {
+  content: "";
+  box-sizing: border-box;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  height: 40px;
+  width: 40px;
+  margin-top: -20px;
+  margin-left: -20px;
+}
+
+#spinner::before {
+  border-radius: 50%;
+  border: 3px solid var(--colour-secondary);
+  border-top-color: var(--colour-primary);
+  border-bottom-color: var(--colour-primary);
+  animation: spinner 0.7s ease infinite;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}

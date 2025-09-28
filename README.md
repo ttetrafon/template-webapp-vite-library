@@ -1,0 +1,1 @@
+# template-webapp-vite-library

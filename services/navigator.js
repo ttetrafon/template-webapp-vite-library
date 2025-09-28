@@ -1,6 +1,6 @@
 import { domainRoot } from '../../data/config.js';
-import { eventNames } from '../../data/enums.js';
 import { routes, aliases } from '../../data/routes.js';
+import { eventNames } from '../data/enums.js';
 import { checkStringForExistence, checkStringForNonExistence } from '../helper/data.js';
 import { clearChildren } from '../helper/dom.js';
 

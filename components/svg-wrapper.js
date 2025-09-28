@@ -87,7 +87,7 @@ class Component extends HTMLElement {
 
   async createSvg() {
     try {
-      let svg = await import(`../assets/ui/${ this.image }.svg?raw`);
+      let svg = await import(`../../assets/ui/${ this.image }.svg?raw`);
       this.$svgContainer.innerHTML = svg.default;
       this.$svg = this._shadow.querySelector("svg");
       this.$svg.removeAttribute("height");

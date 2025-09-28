@@ -1,4 +1,4 @@
-import { eventNames } from "../../data/enums.js";
+import { eventNames } from "../data/enums.js";
 
 ///////////////////////////
 ///   BUILDING BLOCKS   ///

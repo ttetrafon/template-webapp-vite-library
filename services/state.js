@@ -1,5 +1,5 @@
 import { cloneDeep } from "lodash";
-import { generalNames } from "../../data/enums.js";
+import { generalNames } from "../data/enums.js";
 import { jsonRequest } from '../helper/requests.js';
 
 class State {

@@ -1,11 +1,13 @@
-import styles from '../styles/style.css?inline';
+import styles from '../../styles/style.css?inline';
+import defaultStyles from '../styles/shop-filter.css?inline';
 
-const _name = 'my-component';
+const _name = 'shop-filter-radio';
 const template = document.createElement('template');
 
 template.innerHTML = /*html*/`
 <style>
   ${ styles }
+  ${ defaultStyles }
 
   :host {
     display: block;
@@ -26,12 +28,14 @@ class Component extends HTMLElement {
   }
 
   // Attributes need to be observed to be tied to the lifecycle change callback.
-  static get observedAttributes() { return ['label', 'data']; }
+  static get observedAttributes() { return ['label', 'data', 'custom-styles']; }
 
   // Attribute values are always strings, so we need to convert them in their getter/setters as appropriate.
+  get customStyles() { return this.getAttribute('custom-styles'); }
   get data() { return JSON.parse(this.getAttribute('data')); }
   get label() { return this.getAttribute('label'); }
 
+  set customStyles(value) { this.setAttribute('custom-styles', value); }
   set data(value) { this.setAttribute('data', value); }
   set label(value) { this.setAttribute('label', value); }
 
@@ -47,6 +51,9 @@ class Component extends HTMLElement {
     // console.log(`--> attributeChangedCallback(${name}, ${JSON.stringify(oldVal)}, ${JSON.stringify(newVal)})`);
     if (oldVal == newVal) return;
     switch (name) {
+      case 'custom-styles':
+        this._loadCustomStyleSheet();
+        break;
     }
   }
   /**
@@ -66,6 +73,18 @@ class Component extends HTMLElement {
    * Note that adoption does not trigger the constructor again.
    */
   adoptedCallback() {
+  }
+  _loadCustomStyleSheet() {
+    if (!this.customStyles) return;
+
+    try {
+      const linkElement = document.createElement('link');
+      linkElement.setAttribute('rel', 'stylesheet');
+      linkElement.setAttribute('href', this.customStyles);
+
+      this._shadow.appendChild(linkElement);
+    }
+    catch (err) { }
   }
 }
 

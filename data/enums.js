@@ -1,6 +1,7 @@
 import { eventNamesLocal, generalNamesLocal, messageTypesLocal } from "../../data/enums.js";
 
 const eventNamesLib = {
+  CONTENT_FILTER_CLEAR: Symbol("content-filter-clear"),
   DIALOG_OPEN: Symbol("open-dialog"),
   DIALOG_CANCEL: Symbol("cancel-dialog"),
   DIALOG_CONFIRM: Symbol("confirm-dialog"),

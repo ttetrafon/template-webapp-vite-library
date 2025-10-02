@@ -1,7 +1,8 @@
 import styles from '../../styles/style.css?inline';
-import defaultStyles from '../styles/shop-filter.css?inline';
+import { eventNames } from '../data/enums';
+import defaultStyles from '../styles/content-filters.css?inline';
 
-const _name = 'shop-filter-radio';
+const _name = 'content-filters';
 const template = document.createElement('template');
 
 template.innerHTML = /*html*/`
@@ -10,12 +11,44 @@ template.innerHTML = /*html*/`
   ${ defaultStyles }
 
   :host {
-    display: block;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: stretch;
     width: 100%;
+  }
+
+  h3 {
+    position: relative;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  h3 span {
+    font-size: 1em;
+    font-style: italic;
+  }
+
+  h3 .flex-separator {
+    min-width: 16px;
+  }
+
+  h3 button-text-image {
+    height: 1.2em;
+    font-size: 0.85em;
   }
 </style>
 
-<div>...</div>
+<h3 class="flex-line">
+  <span id="label">Filters?!</span>
+  <span class="flex-separator"></span>
+  <button-text-image
+    image="close_small"
+    label="clear"
+    event-name=${ eventNames.CONTENT_FILTER_CLEAR.description }
+  ></button-text-image>
+</h3>
+
+<div id="filters-container"></div>
 `;
 
 class Component extends HTMLElement {
@@ -25,6 +58,9 @@ class Component extends HTMLElement {
     // The mode can be set to 'open' if we need the document to be able to access the shadow-dom internals.
     // Access happens through ths `shadowroot` property in the host.
     this._shadow.appendChild(template.content.cloneNode(true));
+
+    this.$label = this._shadow.getElementById("label");
+    this.$filtersContainer = this._shadow.getElementById("filters-container");
   }
 
   // Attributes need to be observed to be tied to the lifecycle change callback.
@@ -53,6 +89,11 @@ class Component extends HTMLElement {
     switch (name) {
       case 'custom-styles':
         this._loadCustomStyleSheet();
+        break;
+      case 'data':
+        break;
+      case 'label':
+        this.$label.innerText = this.label;
         break;
     }
   }

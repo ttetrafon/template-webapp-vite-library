@@ -1,8 +1,7 @@
 import styles from '../../styles/style.css?inline';
-import { eventNames } from '../data/enums';
-import defaultStyles from '../styles/content-filters.css?inline';
+import defaultStyles from '../styles/---.css?inline';
 
-const _name = 'content-filters';
+const _name = 'content-filter';
 const template = document.createElement('template');
 
 template.innerHTML = /*html*/`
@@ -11,44 +10,30 @@ template.innerHTML = /*html*/`
   ${ defaultStyles }
 
   :host {
-    display: flex;
-    flex-flow: column nowrap;
-    align-items: stretch;
+    display: block;
     width: 100%;
   }
 
-  h3 {
-    position: relative;
-    justify-content: space-between;
-    width: 100%;
+  details {
+    align-items: flex-start;
   }
 
-  h3 span {
+  summary {
+    cursor: pointer;
     font-size: 1em;
-    font-style: italic;
+    color: var(--colour-tertiary);
   }
 
-  h3 .flex-separator {
-    min-width: 16px;
-  }
-
-  h3 button-text-image {
-    height: 1.2em;
-    font-size: 0.85em;
+  @media (prefers-color-scheme: light) {
+    summary {
+      color: var(--colour-secondary);
+    }
   }
 </style>
 
-<h3 class="flex-line">
-  <span id="label">Filters?!</span>
-  <span class="flex-separator"></span>
-  <button-text-image
-    image="close_small"
-    label="clear"
-    event-name=${ eventNames.CONTENT_FILTER_CLEAR.description }
-  ></button-text-image>
-</h3>
-
-<div id="filters-container"></div>
+<details class="flex-column">
+  <summary></summary>
+</details>
 `;
 
 class Component extends HTMLElement {
@@ -59,21 +44,27 @@ class Component extends HTMLElement {
     // Access happens through ths `shadowroot` property in the host.
     this._shadow.appendChild(template.content.cloneNode(true));
 
-    this.$label = this._shadow.getElementById("label");
-    this.$filtersContainer = this._shadow.getElementById("filters-container");
+    this.$details = this._shadow.querySelector('details');
+    this.$title = this._shadow.querySelector('summary');
+    this.$content = null; // this._shadow.querySelector('div');
+    this.$entries = [];
   }
 
   // Attributes need to be observed to be tied to the lifecycle change callback.
-  static get observedAttributes() { return ['label', 'data', 'custom-styles']; }
+  static get observedAttributes() { return ['filter-id', 'label', 'type', 'data', 'custom-styles']; }
 
   // Attribute values are always strings, so we need to convert them in their getter/setters as appropriate.
   get customStyles() { return this.getAttribute('custom-styles'); }
   get data() { return JSON.parse(this.getAttribute('data')); }
+  get filterId() { return this.getAttribute('filter-id'); }
   get label() { return this.getAttribute('label'); }
+  get type() { return this.getAttribute('type'); }
 
   set customStyles(value) { this.setAttribute('custom-styles', value); }
   set data(value) { this.setAttribute('data', value); }
+  set filterId(value) { this.setAttribute('filter-id', value); }
   set label(value) { this.setAttribute('label', value); }
+  set type(value) { this.setAttribute('type', value); }
 
   // A web component implements the following lifecycle methods.
   /**
@@ -91,10 +82,16 @@ class Component extends HTMLElement {
         this._loadCustomStyleSheet();
         break;
       case 'data':
-        this.loadFilterData();
+        this.createEntries();
+        break;
+      case 'filter-id':
+        // TODO: pass it to all entries for events reference
         break;
       case 'label':
-        this.$label.innerText = this.label;
+        this.$title.innerText = this.label;
+        break;
+      case 'type':
+        this.createEntries();
         break;
     }
   }
@@ -129,16 +126,10 @@ class Component extends HTMLElement {
     catch (err) { }
   }
 
-  async loadFilterData() {
-    this.data.forEach(filter => {
-      console.log("... filter:", filter);
-      let f = document.createElement(`content-filter`);
-      f.setAttribute("filter-id", filter.id);
-      f.setAttribute("label", filter.display);
-      f.setAttribute("type", filter.type);
-      f.setAttribute("data", JSON.stringify(filter.values));
-      this.$filtersContainer.appendChild(f);
-    });
+  async createEntries() {
+    if (!this.type || !this.data) return;
+
+    // TODO...
   }
 }
 

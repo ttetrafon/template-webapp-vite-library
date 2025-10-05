@@ -14,14 +14,20 @@ export const eventNames = Object.freeze({ ...eventNamesLib, ...eventNamesLocal }
 const generalNamesLib = {
   OBSERVABLE_USER: Symbol("user"),
 
+  BROADCAST_TYPE_REQUEST_STATE: Symbol("request-state"),
+  BROADCAST_TYPE_RECEIVE_STATE: Symbol("receive-state"),
+  BROADCAST_TYPE_CREATE_OBSERVABLE: Symbol("create-observable"),
+  BROADCAST_TYPE_UPDATE_OBSERVABLE: Symbol("update-observable"),
+
   CONNECTION_LIVE: Symbol("connection-live"),
   CONNECTION_SOLO: Symbol("connection-solo"),
   CONNECTION_OFFLINE: Symbol("connection-offline"),
 
-  BROADCAST_TYPE_REQUEST_STATE: Symbol("request-state"),
-  BROADCAST_TYPE_RECEIVE_STATE: Symbol("receive-state"),
-  BROADCAST_TYPE_CREATE_OBSERVABLE: Symbol("create-observable"),
-  BROADCAST_TYPE_UPDATE_OBSERVABLE: Symbol("update-observable")
+  CONTENT_FILTER_INPUT_RANGE: Symbol("input-range"),
+  CONTENT_FILTER_INPUT_SINGLE: Symbol("input"),
+  CONTENT_FILTER_RADIO_MULTI: Symbol("radio-multi"),
+  CONTENT_FILTER_RADIO_SINGLE: Symbol("radio"),
+  CONTENT_FILTER_SELECTION: Symbol("selection"),
 };
 export const generalNames = Object.freeze({ ...generalNamesLib, ...generalNamesLocal });
 

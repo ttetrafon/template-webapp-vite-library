@@ -131,12 +131,16 @@ class Component extends HTMLElement {
 
   async loadFilterData() {
     this.data.forEach(filter => {
-      console.log("... filter:", filter);
+      // console.log("... filter:", filter);
       let f = document.createElement(`content-filter`);
+      // TODO: should also accept and pass a map (type -> component-name) for population of custom components as filters
       f.setAttribute("filter-id", filter.id);
       f.setAttribute("label", filter.display);
       f.setAttribute("type", filter.type);
       f.setAttribute("data", JSON.stringify(filter.values));
+      if (filter.defaultOpen) {
+        f.setAttribute("open", true);
+      }
       this.$filtersContainer.appendChild(f);
     });
   }

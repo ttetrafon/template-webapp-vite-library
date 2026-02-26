@@ -1,7 +1,7 @@
 import styles from '../../styles/style.css?inline';
 import defaultStyles from '../styles/input-field.css?inline';
-import { eventNames } from '../data/enums.js';
-import { emitCustomEvent } from '../helper/dom.js';
+import { eventNames } from '../data/enums.ts';
+import { emitCustomEvent } from '../helper/dom.ts';
 
 const template = document.createElement('template');
 
@@ -18,45 +18,45 @@ template.innerHTML = /*html*/`
 `;
 
 class Component extends HTMLElement {
+  private _shadow: ShadowRoot;
+  private $container: HTMLDivElement;
+  private $label: HTMLLabelElement;
+  private $field: HTMLInputElement;
+  private fieldKeyEventBound!: (e: Event) => void;
+
   constructor() {
     super();
     this._shadow = this.attachShadow({ mode: 'closed' });
-    // The mode can be set to 'open' if we need the document to be able to access the shadow-dom internals.
-    // Access happens through ths `shadowroot` property in the host.
     this._shadow.appendChild(template.content.cloneNode(true));
 
-    this.$container = this._shadow.querySelector("div");
-    this.$label = this._shadow.querySelector("label");
-    this.$field = this._shadow.querySelector("input");
+    this.$container = this._shadow.querySelector("div")!;
+    this.$label = this._shadow.querySelector("label")!;
+    this.$field = this._shadow.querySelector("input")!;
   }
 
-  // Attributes need to be observed to be tied to the lifecycle change callback.
   static get observedAttributes() { return ['label', 'id', 'hint', 'type', 'required', 'validationFailureMsg', 'direction', 'initial-value', 'custom-styles']; }
 
-  // Attribute values are always strings, so we need to convert them in their getter/setters as appropriate.
   get customStyles() { return this.getAttribute('custom-styles'); }
   get direction() { return this.getAttribute('direction'); }
   get hint() { return this.getAttribute('hint'); }
   get id() { return this.getAttribute('id'); }
-  get initialValue() { return JSON.parse(this.getAttribute('initial-value')); }
+  get initialValue() { return JSON.parse(this.getAttribute('initial-value')!); }
   get label() { return this.getAttribute('label'); }
   get required() { return this.getAttribute('required'); }
   get type() { return this.getAttribute('type'); }
   get validationFailureMsg() { return this.getAttribute('validationFailureMsg'); }
 
-  set customStyles(value) { this.setAttribute('custom-styles', value); }
-  set direction(value) { this.setAttribute('direction', value); }
-  set hint(value) { this.setAttribute('hint', value); }
-  set id(value) { this.setAttribute('id', value); }
-  set initialValue(value) { this.setAttribute('initial-value', value); }
-  set label(value) { this.setAttribute('label', value); }
-  set required(value) { this.setAttribute('required', value); }
-  set type(value) { this.setAttribute('type', value); }
-  set validationFailureMsg(value) { this.setAttribute('validationFailureMsg', value); }
+  set customStyles(value: string | null) { this.setAttribute('custom-styles', value!); }
+  set direction(value: string | null) { this.setAttribute('direction', value!); }
+  set hint(value: string | null) { this.setAttribute('hint', value!); }
+  set id(value: string) { this.setAttribute('id', value); }
+  set initialValue(value: unknown) { this.setAttribute('initial-value', value as string); }
+  set label(value: string | null) { this.setAttribute('label', value!); }
+  set required(value: string | null) { this.setAttribute('required', value!); }
+  set type(value: string | null) { this.setAttribute('type', value!); }
+  set validationFailureMsg(value: string | null) { this.setAttribute('validationFailureMsg', value!); }
 
-  // A web component implements the following lifecycle methods.
-  attributeChangedCallback(name, oldVal, newVal) {
-    // Attribute value changes can be tied to any type of functionality through the lifecycle methods.
+  attributeChangedCallback(name: string, oldVal: string, newVal: string) {
     if (oldVal == newVal) return;
     switch (name) {
       case 'custom-styles':
@@ -67,17 +67,17 @@ class Component extends HTMLElement {
         this.$container.classList.toggle('flex-line', this.direction == 'line');
         break;
       case 'hint':
-        this.$field.setAttribute("placeholder", this.hint);
+        this.$field.setAttribute("placeholder", this.hint!);
         break;
       case 'id':
-        this.$label.setAttribute("for", this.id);
-        this.$field.setAttribute("id", this.id);
+        this.$label.setAttribute("for", this.id!);
+        this.$field.setAttribute("id", this.id!);
         break;
       case 'initial-value':
         this.$field.value = this.initialValue;
         break;
       case 'label':
-        this.$label.innerText = this.label;
+        this.$label.innerText = this.label!;
         break;
       case 'required':
         if (this.required == 'yes') {
@@ -88,25 +88,18 @@ class Component extends HTMLElement {
         }
         break;
       case 'type':
-        this.$field.setAttribute("type", this.type);
+        this.$field.setAttribute("type", this.type!);
         break;
     }
   }
   connectedCallback() {
-    // Triggered when the component is added to the DOM.
     this.fieldKeyEventBound = this.fieldKeyEvent.bind(this);
-
     this.$field.addEventListener("keyup", this.fieldKeyEventBound);
   }
   disconnectedCallback() {
-    // Triggered when the component is removed from the DOM.
-    // Ideal place for cleanup code.
-    // Note that when destroying a component, it is good to also release any listeners.
     this.$field.removeEventListener("keyup", this.fieldKeyEventBound);
   }
   adoptedCallback() {
-    // Triggered when the element is adopted through `document.adoptElement()` (like when using an <iframe/>).
-    // Note that adoption does not trigger the constructor again.
   }
   _loadCustomStyleSheet() {
     if (!this.customStyles) return;
@@ -118,13 +111,11 @@ class Component extends HTMLElement {
     this._shadow.appendChild(linkElement);
   }
 
-  /**
-   * @param {Event} event
-   */
-  fieldKeyEvent(event) {
-    if (["Enter", "NumpadEnter"].includes(event.code)) {
-      emitCustomEvent(this.$field, eventNames.INPUT_CONTROL.description, {
-        keyCode: code
+  fieldKeyEvent(event: Event) {
+    const ke = event as KeyboardEvent;
+    if (["Enter", "NumpadEnter"].includes(ke.code)) {
+      emitCustomEvent(this.$field, eventNames.INPUT_CONTROL.description!, {
+        keyCode: ke.code
       });
       this.$field.blur();
     }
@@ -136,8 +127,8 @@ class Component extends HTMLElement {
 
   validateValue() {
     console.log(`---> validateValue(${ this.id })`);
-      this.$field.checkValidity();
-    this.$field.setCustomValidity(this.validationFailureMsg);
+    this.$field.checkValidity();
+    this.$field.setCustomValidity(this.validationFailureMsg!);
     return this.$field.reportValidity();
   }
 }

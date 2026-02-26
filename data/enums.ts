@@ -1,4 +1,4 @@
-import { eventNamesLocal, generalNamesLocal, messageTypesLocal } from "../../data/enums.js";
+import { eventNamesLocal, generalNamesLocal, messageTypesLocal } from "../../data/enums.ts";
 
 const eventNamesLib = {
   CONTENT_FILTER_CLEAR: Symbol("content-filter-clear"),

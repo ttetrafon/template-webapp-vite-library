@@ -1,13 +1,19 @@
 import { cloneDeep } from "lodash";
-import { generalNames } from "../data/enums.js";
-import { jsonRequest } from '../helper/requests.js';
+import { generalNames } from "../data/enums.ts";
+import { jsonRequest } from '../helper/requests.ts';
+
+type ObservableEntry = {
+  proxy: Record<string, any>;
+  listeners: Record<string, (subscriber: string, property: string, newValue: unknown) => void>;
+};
 
 class State {
-  #observables = {};
-  #gameConnection = generalNames.CONNECTION_SOLO;
-  #observablesBroadcastChannel;
-  #pageRunAt;
-  #requestedState = false;
+  static instance: State;
+  #observables: Record<string, ObservableEntry> = {};
+  #gameConnection: symbol;
+  #observablesBroadcastChannel: BroadcastChannel;
+  #pageRunAt: number;
+  #requestedState: boolean = false;
 
   constructor() {
     // console.log(`---> State()`);
@@ -16,6 +22,7 @@ class State {
       State.instance = this;
     }
 
+    this.#gameConnection = generalNames.CONNECTION_SOLO;
     this.#pageRunAt = new Date().valueOf();
     // console.log(this.#pageRunAt);
 
@@ -24,7 +31,6 @@ class State {
       this.receiveBroadcastedMessage(event);
     }
 
-    // console.log("state.#observables:", this.#observables, cloneDeep(this.#observables[generalNames.OBSERVABLE_USER.description].proxy));
     this.#requestedState = true;
     this.broadcastMessage({
       type: generalNames.BROADCAST_TYPE_REQUEST_STATE.description,
@@ -34,17 +40,13 @@ class State {
     return State.instance;
   }
 
-  /**
-   *
-   * @param {Object} msg
-   */
-  async broadcastMessage(msg) {
+  async broadcastMessage(msg: object) {
     this.#observablesBroadcastChannel.postMessage(JSON.stringify(msg));
   }
 
-  collectState() {
+  collectState(): Record<string, unknown> {
     console.log(`---> collectState()`);
-    let state = {};
+    let state: Record<string, unknown> = {};
     let keys = Object.keys(this.#observables);
     for (let i = 0; i < keys.length; i++) {
       state[keys[i]] = cloneDeep(this.#observables[keys[i]].proxy);
@@ -53,37 +55,32 @@ class State {
     return state;
   }
 
-  /**
-   * Create an observable for others to listen to.
-   * @param {String} observable
-   * @param {Object} obj
-   */
-  createObservable(observable, obj, broadcastCreation = true) {
-    let onChange = (property, newValue) => {
+  createObservable(observable: string, obj: object, broadcastCreation = true) {
+    let onChange = (property: string, newValue: unknown) => {
       // console.log(`Property '${property}' changed to:`, newValue, "... calling subscribers!");
       Object.keys(this.#observables[observable].listeners).forEach(subscriber =>
         this.#observables[observable].listeners[subscriber](subscriber, property, newValue)
       );
     };
 
-    let proxy = new Proxy(obj, {
+    let proxy = new Proxy(obj as Record<string, any>, {
       get(target, prop, receiver) {
-        const value = target[prop];
+        const value = target[prop as string];
         if (value instanceof Function) {
-          return function(...args) {
+          return function(...args: unknown[]) {
             return value.apply(this === receiver ? target : this, args);
           };
         }
         return value;
       },
       set(target, prop, value, receiver) {
-        if (target[prop] !== value) {
-          onChange(prop, value);
+        if (target[prop as string] !== value) {
+          onChange(prop as string, value);
         }
         return Reflect.set(target, prop, value, receiver);
       },
       deleteProperty(target, prop) {
-        onChange(prop, undefined);
+        onChange(prop as string, undefined);
         return Reflect.deleteProperty(target, prop);
       }
     });
@@ -100,15 +97,9 @@ class State {
     });
   }
 
-  /**
-   *
-   * @param {String} url
-   * @param {String} observableName
-   * @returns
-   */
-  async getDataFromServer(url, observableName) {
+  async getDataFromServer(url: string, observableName: string): Promise<unknown> {
     // console.log(`---> getDataFromServer(${url})`);
-    let res = await jsonRequest(url);
+    let res = await jsonRequest(url) as Record<string, any>;
 
     if (res.completionCode == 0) {
       delete res.completionCode;
@@ -123,48 +114,29 @@ class State {
     return res;
   }
 
-  async getObservable(observable) {
+  async getObservable(observable: string): Promise<unknown> {
     console.log(`---> getObservable(${observable})`);
-    if (this.#observables.hasOwnProperty(observable)) {
+    if (Object.prototype.hasOwnProperty.call(this.#observables, observable)) {
       return cloneDeep(this.#observables[observable].proxy);
     } else {
       return {};
     }
   }
 
-  /**
-   *
-   * @param {String} observable
-   * @param {String} prop
-   * @returns
-   */
-  async getValueFromObservable(observable, prop) {
+  async getValueFromObservable(observable: string, prop: string): Promise<unknown> {
     // console.log(`---> getValueFromObservable(${observable}, ${prop})`);
-    if (this.#observables.hasOwnProperty(observable)) {
+    if (Object.prototype.hasOwnProperty.call(this.#observables, observable)) {
       let value = this.#observables[observable].proxy[prop];
       return cloneDeep(value);
     }
     return null;
   }
 
-  /**
-   *
-   * @param {URL} url
-   */
-  async pingServer(url) {
+  async pingServer(url: string): Promise<void> {
     await jsonRequest(url);
   }
 
-  /**
-   * Publish a message to the server.
-   * Depending on the gameConnection, publish to
-   *  - web-sockets (live)
-   *  - api (solo)
-   *  - nowhere, keep a list of commands used, and update the local data directly (offline) [TODO: all data will be synchronised when switching to another game mode]
-   * @param {Symbol} type
-   * @param {Object} message
-   */
-  async publishMessage(url, message, method) {
+  async publishMessage(url: string, message: unknown, method: symbol): Promise<unknown> {
     // console.log(`---> publishMessage(${url}, ${JSON.stringify(message)})`);
     switch(this.#gameConnection) {
       case generalNames.CONNECTION_LIVE:
@@ -179,7 +151,7 @@ class State {
     }
   }
 
-  async receiveBroadcastedMessage(event) {
+  async receiveBroadcastedMessage(event: MessageEvent) {
     console.log(`---> receiveBroadcastedMessage()`, event);
     let msg = JSON.parse(event.data);
     console.log("msg:", msg);
@@ -202,7 +174,7 @@ class State {
         for (let i = 0; i < keys.length; i++) {
           let key = keys[i];
           let data = msg.state[key];
-          if (this.#observables.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(this.#observables, key)) {
             let props = Object.keys(data);
             for (let j = 0; j < props.length; j++) {
               let prop = props[j];
@@ -222,36 +194,22 @@ class State {
     }
   }
 
-  /**
-   *
-   * @param {String} observable: the name of the object
-   * @param {String} subscriber: the name of the subscriber
-   * @param {Function} callback: the function called in the subscriber when the
-   */
-  async subscribeToObservable(observable, subscriber, callback) {
-    if (this.#observables.hasOwnProperty(observable) && !this.#observables[observable].listeners.hasOwnProperty(subscriber)) {
+  async subscribeToObservable(observable: string, subscriber: string, callback: (subscriber: string, property: string, newValue: unknown) => void) {
+    if (Object.prototype.hasOwnProperty.call(this.#observables, observable) && !Object.prototype.hasOwnProperty.call(this.#observables[observable].listeners, subscriber)) {
       this.#observables[observable].listeners[subscriber] = callback;
     }
     // console.log(this.#observables[observable]);
   }
 
-  async unsubscribeFromObservable(observable, subscriber) {
-    if (this.#observables.hasOwnProperty(observable) && this.#observables[observable].listeners.hasOwnProperty(subscriber)) {
+  async unsubscribeFromObservable(observable: string, subscriber: string) {
+    if (Object.prototype.hasOwnProperty.call(this.#observables, observable) && Object.prototype.hasOwnProperty.call(this.#observables[observable].listeners, subscriber)) {
       delete this.#observables[observable].listeners[subscriber];
     }
   }
 
-  /**
-   *
-   * @param {String} observable The name of the observable object.
-   * @param {String} prop The name of the key in the object to update.
-   * @param {Object} value
-   */
-  async updateObservable(observable, prop, value, broadcastChange = true) {
-    // TODO: updateObservable to accept an object so we can pass multiple values?
+  async updateObservable(observable: string, prop: string, value: unknown, broadcastChange = true) {
     // console.log(`---> updateObservable(${observable}, ${prop}, ${JSON.stringify(value)})`);
-    let s = await this.getValueFromObservable(observable, prop);
-    if (this.#observables.hasOwnProperty(observable)) {
+    if (Object.prototype.hasOwnProperty.call(this.#observables, observable)) {
       this.#observables[observable].proxy[prop] = value;
       if (broadcastChange) this.broadcastMessage({
         type: generalNames.BROADCAST_TYPE_UPDATE_OBSERVABLE.description,

@@ -1,4 +1,4 @@
-export function roundToTwoDecimals(num) {
+export function roundToTwoDecimals(num: number): string | 0 {
   if (!num) {
     return 0;
   }
@@ -11,7 +11,7 @@ export function roundToTwoDecimals(num) {
   return num.toFixed(2);
 }
 
-export function roundToInteger(num) {
+export function roundToInteger(num: number): string | 0 {
   if (!num) {
     return 0;
   }
@@ -24,6 +24,6 @@ export function roundToInteger(num) {
   return num.toFixed(0);
 }
 
-export function addLeadingPositiveSign(num) {
+export function addLeadingPositiveSign(num: number): string {
   return num > 0 ? `+${num}` : `${num}`
 }

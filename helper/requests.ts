@@ -4,21 +4,14 @@ export const requestSymbols = Object.freeze({
   PUT: Symbol("PUT")
 });
 
-/**
- *
- * @param {String} url
- * @param {JSON} body
- * @param {Symbol} method
- * @returns
- */
-export async function jsonRequest(url, body, method = requestSymbols.GET) {
+export async function jsonRequest(url: string, body?: unknown, method: symbol = requestSymbols.GET): Promise<unknown> {
   // console.log(`---> request(${url}, ${JSON.stringify(body)}, ${method.description})`);
-  let headers = {
+  let headers: Record<string, string> = {
     "Accept": "*/*",
     "Connection": "keep-alive",
     "Content-Type": "application/json"
   };
-  let requestData = {
+  let requestData: RequestInit = {
     method: method.description,
     headers: headers,
     mode: "cors",
@@ -37,7 +30,7 @@ export async function jsonRequest(url, body, method = requestSymbols.GET) {
   return res;
 }
 
-export async function formDataRequest(url, formData) {
+export async function formDataRequest(url: string, formData: FormData): Promise<unknown> {
   let request = new Request(url, {
     method: 'POST',
     headers: {
@@ -53,7 +46,7 @@ export async function formDataRequest(url, formData) {
   return await response.json();
 }
 
-export async function fetchJsonData(url) {
+export async function fetchJsonData(url: string): Promise<unknown> {
   let res = await fetch(url);
   console.log(res);
   if (!(res.ok && res.status == 200)) return null;

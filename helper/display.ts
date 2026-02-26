@@ -1,39 +1,20 @@
-/**
- *
- * @param {Date} date
- * @returns {String} Format: DD/MM/YYYY
- */
-export function displayDateAsDDMMYYYY(date) {
+export function displayDateAsDDMMYYYY(date: Date): string {
   let str = date.toISOString();
   return `${str.substring(8,10)}/${str.substring(5,7)}/${str.substring(0,4)}`;
 }
-/**
- *
- * @param {Date} date
- * @returns {String} Format: YYYY-MM-DD
- */
-export function displayDateAsYYYYMMDD(date) {
+
+export function displayDateAsYYYYMMDD(date: Date): string {
   let str = date.toISOString();
   return `${str.substring(0,4)}-${str.substring(5,7)}-${str.substring(8,10)}`;
 }
 
-/**
- *
- * @param {timestamp} timestamp
- * @returns {String} Format: DD/MM/YYYY, HH:mm:ss
- */
-export function displayTimeAsHoursMinutesSeconds(timestamp) {
+export function displayTimeAsHoursMinutesSeconds(timestamp: number): string {
   let then = new Date(timestamp);
   // 27/09/2024, 15:47:25
   return then.toISOString().substring(11, 19);
 }
 
-/**
- *
- * @param {timestamp} timestamp
- * @returns
- */
-export function displayTimeAsLocaleString(timestamp) {
+export function displayTimeAsLocaleString(timestamp: number): string {
   let then = new Date(timestamp);
   let str = then.toISOString();
   // 2024-09-30T08:36:48.826Z

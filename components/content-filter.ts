@@ -1,5 +1,5 @@
 import styles from '../../styles/style.css?inline';
-import { generalNames } from '../data/enums';
+import { generalNames } from '../data/enums.ts';
 import defaultStyles from '../styles/---.css?inline';
 
 const _name = 'content-filter';
@@ -38,47 +38,38 @@ template.innerHTML = /*html*/`
 `;
 
 class Component extends HTMLElement {
+  private _shadow: ShadowRoot;
+  private $details: HTMLDetailsElement;
+  private $title: HTMLElement;
+  private $content: HTMLElement | null = null;
+  private $entries: HTMLElement[] = [];
+
   constructor() {
     super();
     this._shadow = this.attachShadow({ mode: 'closed' });
-    // The mode can be set to 'open' if we need the document to be able to access the shadow-dom internals.
-    // Access happens through ths `shadowroot` property in the host.
     this._shadow.appendChild(template.content.cloneNode(true));
 
-    this.$details = this._shadow.querySelector('details');
-    this.$title = this._shadow.querySelector('summary');
-    this.$content = null; // used to store the component with the actual filter
-    this.$entries = [];
+    this.$details = this._shadow.querySelector('details')!;
+    this.$title = this._shadow.querySelector('summary')!;
   }
 
-  // Attributes need to be observed to be tied to the lifecycle change callback.
   static get observedAttributes() { return ['filter-id', 'label', 'type', 'data', 'custom-styles', 'open']; }
 
-  // Attribute values are always strings, so we need to convert them in their getter/setters as appropriate.
   get customStyles() { return this.getAttribute('custom-styles'); }
-  get data() { return JSON.parse(this.getAttribute('data')); }
+  get data() { return JSON.parse(this.getAttribute('data')!); }
   get filterId() { return this.getAttribute('filter-id'); }
   get label() { return this.getAttribute('label'); }
   get open() { return this.hasAttribute('open'); }
   get type() { return this.getAttribute('type'); }
 
-  set customStyles(value) { this.setAttribute('custom-styles', value); }
-  set data(value) { this.setAttribute('data', value); }
-  set filterId(value) { this.setAttribute('filter-id', value); }
-  set label(value) { this.setAttribute('label', value); }
-  set open(value) { this.toggleAttribute('open', Boolean(value)); }
-  set type(value) { this.setAttribute('type', value); }
+  set customStyles(value: string | null) { this.setAttribute('custom-styles', value!); }
+  set data(value: unknown) { this.setAttribute('data', value as string); }
+  set filterId(value: string | null) { this.setAttribute('filter-id', value!); }
+  set label(value: string | null) { this.setAttribute('label', value!); }
+  set open(value: boolean) { this.toggleAttribute('open', Boolean(value)); }
+  set type(value: string | null) { this.setAttribute('type', value!); }
 
-  // A web component implements the following lifecycle methods.
-  /**
-   * Attribute value changes can be tied to any type of functionality through the lifecycle methods.
-   * @param {String} name
-   * @param {Object} oldVal
-   * @param {Object} newVal
-   * @returns
-   */
-  attributeChangedCallback(name, oldVal, newVal) {
-    // console.log(`--> attributeChangedCallback(${name}, ${JSON.stringify(oldVal)}, ${JSON.stringify(newVal)})`);
+  attributeChangedCallback(name: string, oldVal: string, newVal: string) {
     if (oldVal == newVal) return;
     switch (name) {
       case 'custom-styles':
@@ -91,7 +82,7 @@ class Component extends HTMLElement {
         // TODO: pass it to all entries for events reference
         break;
       case 'label':
-        this.$title.innerText = this.label;
+        this.$title.innerText = this.label!;
         break;
       case 'open':
         this.$details.open = this.open;
@@ -101,23 +92,11 @@ class Component extends HTMLElement {
         break;
     }
   }
-  /**
-   * Triggered when the component is added to the DOM.
-   */
   connectedCallback() {
     this.$details.open = this.open;
   }
-  /**
-   * Triggered when the component is removed from the DOM.
-   * - Ideal place for cleanup code.
-   * - Note that when destroying a component, it is good to also release any listeners.
-   */
   disconnectedCallback() {
   }
-  /**
-   * Triggered when the element is adopted through `document.adoptElement()` (like when using an <iframe/>).
-   * Note that adoption does not trigger the constructor again.
-   */
   adoptedCallback() {
   }
   _loadCustomStyleSheet() {
@@ -155,7 +134,7 @@ class Component extends HTMLElement {
         return;
     }
 
-    this.$content.setAttribute("group-id", this.filterId);
+    this.$content.setAttribute("group-id", this.filterId!);
     this.$content.setAttribute("type", this.type);
     this.$content.setAttribute("data", JSON.stringify(this.data));
 

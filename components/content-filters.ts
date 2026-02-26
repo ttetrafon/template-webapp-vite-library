@@ -1,5 +1,5 @@
 import styles from '../../styles/style.css?inline';
-import { eventNames } from '../data/enums';
+import { eventNames } from '../data/enums.ts';
 import defaultStyles from '../styles/content-filters.css?inline';
 
 const _name = 'content-filters';
@@ -52,39 +52,30 @@ template.innerHTML = /*html*/`
 `;
 
 class Component extends HTMLElement {
+  private _shadow: ShadowRoot;
+  private $label: HTMLElement;
+  private $filtersContainer: HTMLElement;
+
   constructor() {
     super();
     this._shadow = this.attachShadow({ mode: 'closed' });
-    // The mode can be set to 'open' if we need the document to be able to access the shadow-dom internals.
-    // Access happens through ths `shadowroot` property in the host.
     this._shadow.appendChild(template.content.cloneNode(true));
 
-    this.$label = this._shadow.getElementById("label");
-    this.$filtersContainer = this._shadow.getElementById("filters-container");
+    this.$label = this._shadow.getElementById("label")!;
+    this.$filtersContainer = this._shadow.getElementById("filters-container")!;
   }
 
-  // Attributes need to be observed to be tied to the lifecycle change callback.
   static get observedAttributes() { return ['label', 'data', 'custom-styles']; }
 
-  // Attribute values are always strings, so we need to convert them in their getter/setters as appropriate.
   get customStyles() { return this.getAttribute('custom-styles'); }
-  get data() { return JSON.parse(this.getAttribute('data')); }
+  get data() { return JSON.parse(this.getAttribute('data')!); }
   get label() { return this.getAttribute('label'); }
 
-  set customStyles(value) { this.setAttribute('custom-styles', value); }
-  set data(value) { this.setAttribute('data', value); }
-  set label(value) { this.setAttribute('label', value); }
+  set customStyles(value: string | null) { this.setAttribute('custom-styles', value!); }
+  set data(value: unknown) { this.setAttribute('data', value as string); }
+  set label(value: string | null) { this.setAttribute('label', value!); }
 
-  // A web component implements the following lifecycle methods.
-  /**
-   * Attribute value changes can be tied to any type of functionality through the lifecycle methods.
-   * @param {String} name
-   * @param {Object} oldVal
-   * @param {Object} newVal
-   * @returns
-   */
-  attributeChangedCallback(name, oldVal, newVal) {
-    // console.log(`--> attributeChangedCallback(${name}, ${JSON.stringify(oldVal)}, ${JSON.stringify(newVal)})`);
+  attributeChangedCallback(name: string, oldVal: string, newVal: string) {
     if (oldVal == newVal) return;
     switch (name) {
       case 'custom-styles':
@@ -94,26 +85,14 @@ class Component extends HTMLElement {
         this.loadFilterData();
         break;
       case 'label':
-        this.$label.innerText = this.label;
+        this.$label.innerText = this.label!;
         break;
     }
   }
-  /**
-   * Triggered when the component is added to the DOM.
-   */
   connectedCallback() {
   }
-  /**
-   * Triggered when the component is removed from the DOM.
-   * - Ideal place for cleanup code.
-   * - Note that when destroying a component, it is good to also release any listeners.
-   */
   disconnectedCallback() {
   }
-  /**
-   * Triggered when the element is adopted through `document.adoptElement()` (like when using an <iframe/>).
-   * Note that adoption does not trigger the constructor again.
-   */
   adoptedCallback() {
   }
   _loadCustomStyleSheet() {
@@ -130,7 +109,7 @@ class Component extends HTMLElement {
   }
 
   async loadFilterData() {
-    this.data.forEach(filter => {
+    this.data.forEach((filter: any) => {
       // console.log("... filter:", filter);
       let f = document.createElement(`content-filter`);
       // TODO: should also accept and pass a map (type -> component-name) for population of custom components as filters
@@ -139,7 +118,7 @@ class Component extends HTMLElement {
       f.setAttribute("type", filter.type);
       f.setAttribute("data", JSON.stringify(filter.values));
       if (filter.defaultOpen) {
-        f.setAttribute("open", true);
+        f.setAttribute("open", String(true));
       }
       this.$filtersContainer.appendChild(f);
     });

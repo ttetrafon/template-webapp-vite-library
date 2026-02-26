@@ -1,22 +1,25 @@
-import { eventNames } from "../data/enums.js";
+import { eventNames } from "../data/enums.ts";
 
 ///////////////////////////
 ///   BUILDING BLOCKS   ///
 ///////////////////////////
 
-/**
- *
- * @param {element} innerHTML
- */
-export async function buildStructureFromHtml(element) {
+interface NodeStructure {
+  id?: string;
+  element: string;
+  contents?: string | NodeStructure[];
+  newLine?: boolean;
+  attributes?: Array<{ attribute: string; value: string | object }>;
+  order?: string[];
+}
+
+export async function buildStructureFromHtml(element: HTMLElement): Promise<Record<string, NodeStructure>> {
   // console.log("---> buildStructureFromHtml()", element);
-  // https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML
-  let data = {};
+  let data: Record<string, NodeStructure> = {};
 
   let nodesNumber = element.childNodes.length;
   if (nodesNumber == 0) return data;
 
-  // If there is only a single child node, we either have a single element within - could be either #text or any custom element
   if (nodesNumber == 1) {
     let id = element.id.split("::")[1];
     data[id] = await elementStructure(element, element.childNodes[0]);
@@ -29,14 +32,14 @@ export async function buildStructureFromHtml(element) {
 
   return data;
 }
-async function elementStructure(element, node) {
-  let structure = {};
+async function elementStructure(element: HTMLElement, node: ChildNode): Promise<NodeStructure> {
+  let structure: NodeStructure = { element: element.nodeName.toLowerCase() };
   switch (node.nodeName) {
     case '#text':
       // console.log("... single #text node");
       structure.id = element.id.split("::")[1];
       structure.element = element.nodeName.toLowerCase();
-      structure.contents = element.innerText;
+      structure.contents = (element as HTMLElement).innerText;
       let newLine = element.getAttribute("new-line");
       if (newLine) {
         structure.newLine = true;
@@ -46,24 +49,19 @@ async function elementStructure(element, node) {
   return structure;
 }
 
-/**
- *
- * @param {json} data
- * @param {Node} parent
- */
-export async function buildHtmlFromStructure(data, parent) {
+export async function buildHtmlFromStructure(data: NodeStructure, parent: Node): Promise<void> {
   // console.log(`---> buildHtmlFromStructure`, data, parent);
-  clearChildren(parent);
-  for (let i = 0; i < data.order.length; i++) {
-    let element = data[data.order[i]];
+  clearChildren(parent as HTMLElement);
+  for (let i = 0; i < data.order!.length; i++) {
+    let element = (data as any)[data.order![i]];
     let node = await buildElement(element);
     parent.appendChild(node);
   }
 }
-export async function buildElement(node) {
+export async function buildElement(node: NodeStructure): Promise<Node> {
   // Create text nodes
   if (node.element === "#text") {
-    return document.createTextNode(node.contents);
+    return document.createTextNode(node.contents as string);
   }
 
   // Create the main element
@@ -79,7 +77,7 @@ export async function buildElement(node) {
 
   // Handle contents (recursively if necessary)
   if (Array.isArray(node.contents)) {
-    node.contents.forEach(childNode => el.appendChild(buildElement(childNode)));
+    node.contents.forEach(childNode => el.appendChild(buildElement(childNode as NodeStructure) as any));
   }
   else if (node.contents && typeof node.contents === "string") {
     el.textContent = node.contents;
@@ -92,29 +90,24 @@ export async function buildElement(node) {
 ///   CHILD ELEMENTS   ///
 //////////////////////////
 
-export async function clearChildren(parent) {
+export async function clearChildren(parent: HTMLElement): Promise<void> {
   while (parent.firstChild) {
-    parent.removeChild(parent.lastChild);
+    parent.removeChild(parent.lastChild!);
   }
 }
-export async function clearChildrenOfType(parent, tag) {
+export async function clearChildrenOfType(parent: HTMLElement, tag: string): Promise<void> {
   for (let i = parent.children.length - 1; i >= 0; i--) {
     if ((parent.children[i].nodeName).toLowerCase() === tag) parent.children[i].remove();
   }
 }
-export async function clearChildrenOfClass(parent, className) {
+export async function clearChildrenOfClass(parent: HTMLElement, className: string): Promise<void> {
   for (let i = parent.children.length - 1; i >= 0; i--) {
     if (parent.children[i].classList.contains(className)) parent.children[i].remove();
   }
 }
 
-/**
- *
- * @param {HTMLElement} self
- * @param {HTMLElement} parent
- */
-export async function findSelfIndexInParent(self) {
-  let element = self;
+export async function findSelfIndexInParent(self: Element): Promise<number> {
+  let element: Element | null = self;
   let index = 0;
   while (element.previousElementSibling) {
     element = element.previousElementSibling;
@@ -123,28 +116,19 @@ export async function findSelfIndexInParent(self) {
   return index;
 }
 
-/**
- *
- * @param {HTMLElement} newElement
- * @param {HTMLElement} anchorElement
- */
-export async function putElementBefore(newElement, anchorElement) {
-  anchorElement.parentNode.insertBefore(newElement, anchorElement);
+export async function putElementBefore(newElement: Node, anchorElement: Node): Promise<void> {
+  anchorElement.parentNode!.insertBefore(newElement, anchorElement);
 }
-/**
- *
- * @param {HTMLElement} newElement
- * @param {HTMLElement} anchorElement
- */
-export async function putElementAfter(newElement, anchorElement) {
+
+export async function putElementAfter(newElement: Node, anchorElement: Node): Promise<void> {
   // console.log("---> putElementAfter(newElement, anchorElement)", newElement, anchorElement);
   if (anchorElement.nextSibling) {
     // console.log("anchorElement.nextSibling:", anchorElement.nextSibling);
-    anchorElement.parentNode.insertBefore(newElement, anchorElement.nextSibling);
+    anchorElement.parentNode!.insertBefore(newElement, anchorElement.nextSibling);
   }
   else {
     // console.log("anchorElement.parentNode:", anchorElement.parentNode);
-    anchorElement.parentNode.appendChild(newElement);
+    anchorElement.parentNode!.appendChild(newElement);
   }
 }
 
@@ -152,14 +136,7 @@ export async function putElementAfter(newElement, anchorElement) {
 ///   INPUT ELEMENTS   ///
 //////////////////////////
 
-/**
- * Creates options within a select element.
- * @param {HTMLElement} selector
- * @param {Array<Object>} options
- * @param {string} valueKey
- * @param {string} textKey
- */
-export async function populateSelectorOptions(selector, options, valueKey, textKey) {
+export async function populateSelectorOptions(selector: HTMLSelectElement, options: Array<Record<string, string>>, valueKey: string, textKey: string): Promise<void> {
   if (!options) return;
   options.forEach(option => {
     let opt = document.createElement("option");
@@ -168,11 +145,8 @@ export async function populateSelectorOptions(selector, options, valueKey, textK
     selector.appendChild(opt);
   });
 }
-/**
- * Sets the date in the input to today by default.
- * @param {HTMLElement} dateInput
- */
-export async function setDateInputAsToday(dateInput) {
+
+export async function setDateInputAsToday(dateInput: HTMLInputElement): Promise<void> {
   const today = new Date();
 
   // Format the date as yyyy-mm-dd
@@ -183,34 +157,24 @@ export async function setDateInputAsToday(dateInput) {
   dateInput.value = `${ year }-${ month }-${ day }`;
 }
 
-/**
- *
- * @param {HTMLElement} details
- * @param {HTMLElement} summary
- * @param {Object} detailControls
- */
-export async function makeDetailsPanelOpenHoverable(context, details, summary, detailControls) {
-  details.addEventListener("mouseenter", toggleDetailsVisibility.bind(context, details, detailControls, true));
-  details.addEventListener("mouseleave", toggleDetailsVisibility.bind(context, details, detailControls, false));
-  summary.addEventListener("click", summaryClicked.bind(context, details, detailControls));
+interface DetailControls {
+  detailsForcedOpen: boolean;
+  detailsOpenFromHover: boolean;
 }
-/**
- *
- * @param {HTMLElement} details
- * @param {HTMLElement} summary
- */
-export async function unmakeDetailsPanelOpenHoverable(details, summary) {
-  details.removeEventListener("mouseenter", toggleDetailsVisibility);
-  details.removeEventListener("mouseleave", toggleDetailsVisibility);
-  summary.removeEventListener("click", summaryClicked);
+
+export async function makeDetailsPanelOpenHoverable(context: unknown, details: HTMLDetailsElement, summary: HTMLElement, detailControls: DetailControls): Promise<void> {
+  details.addEventListener("mouseenter", toggleDetailsVisibility.bind(context as object, details, detailControls, true));
+  details.addEventListener("mouseleave", toggleDetailsVisibility.bind(context as object, details, detailControls, false));
+  summary.addEventListener("click", summaryClicked.bind(context as object, details, detailControls));
 }
-/**
- *
- * @param {HTMLElement} details
- * @param {Object} detailControls
- * @param {Event} event
- */
-function summaryClicked(details, detailControls, event) {
+
+export async function unmakeDetailsPanelOpenHoverable(details: HTMLDetailsElement, summary: HTMLElement): Promise<void> {
+  details.removeEventListener("mouseenter", toggleDetailsVisibility as EventListener);
+  details.removeEventListener("mouseleave", toggleDetailsVisibility as EventListener);
+  summary.removeEventListener("click", summaryClicked as EventListener);
+}
+
+function summaryClicked(this: unknown, details: HTMLDetailsElement, detailControls: DetailControls, event: Event): void {
   event.preventDefault();
   event.stopImmediatePropagation();
 
@@ -229,15 +193,8 @@ function summaryClicked(details, detailControls, event) {
     }
   }
 }
-/**
- *
- * @param {HTMLElement} details
- * @param {Object} detailControls
- * @param {Boolean} mouseHover
- * @param {Event} event
- * @returns
- */
-function toggleDetailsVisibility(details, detailControls, mouseHover, event) {
+
+function toggleDetailsVisibility(this: unknown, details: HTMLDetailsElement, detailControls: DetailControls, mouseHover: boolean, event: Event): void {
   event.stopImmediatePropagation();
   if (detailControls.detailsForcedOpen) return;
 
@@ -251,18 +208,13 @@ function toggleDetailsVisibility(details, detailControls, mouseHover, event) {
   }
 }
 
-/**
- *
- * @param {HTMLElement} element
- * @returns Integer
- */
-export function getCaretPosition(element) {
+export function getCaretPosition(element: HTMLElement): number {
   let caretPos = 0;
-  let sel, range;
+  let sel: Selection | null, range: Range;
 
   if (window.getSelection) {
     sel = window.getSelection();
-    if (sel.rangeCount) {
+    if (sel && sel.rangeCount) {
       range = sel.getRangeAt(0);
 
       if (range.commonAncestorContainer.parentNode == element ||
@@ -282,28 +234,19 @@ export function getCaretPosition(element) {
 
   return caretPos;
 }
-/**
- * Counts the total number of characters within an element and its children.
- * @param {HTMLElement} element
- * @returns Integer
- */
-export function getTotalCharacterCount(element) {
+
+export function getTotalCharacterCount(element: HTMLElement): number {
   // TODO: will need to recursively run the node-tree for custom elements...
   const text = element.textContent || element.innerText;
   return text.length;
 }
-/**
- *
- * @param {Selection} selection
- * @param {HTMLElement} element
- * @param {number} position
- */
-export function setCaretPosition(selection, element, position) {
+
+export function setCaretPosition(selection: Selection, element: HTMLElement, position: number): void {
   if (element) {
     const range = document.createRange();
     const textNode = element.firstChild;
     if (textNode) {
-      range.setStart(textNode, Math.min(position, textNode.length));
+      range.setStart(textNode, Math.min(position, (textNode as Text).length));
       range.collapse(true);
       selection.removeAllRanges();
       selection.addRange(range);
@@ -316,11 +259,8 @@ export function setCaretPosition(selection, element, position) {
     }
   }
 }
-/**
- *
- * @param {HTMLElement} element
- */
-export function setCaretPositionAtEnd(element) {
+
+export function setCaretPositionAtEnd(element: HTMLElement): void {
   const selection = window.getSelection();
   if (!selection) return;
   const range = document.createRange();
@@ -335,55 +275,34 @@ export function setCaretPositionAtEnd(element) {
 ///   EVENTS   ///
 //////////////////
 
-/**
- *
- * @param {HTMLElement} that
- * @param {String} eventName
- * @param {JSON} eventDetails
- */
-export async function emitCustomEvent(that, eventName, eventDetails) {
+export async function emitCustomEvent(that: EventTarget, eventName: string, eventDetails: object): Promise<void> {
   that.dispatchEvent(new CustomEvent(eventName, {
     bubbles: true,
     composed: true,
     detail: eventDetails
   }));
 };
-/**
- *
- * @param {HTMLElement} that
- * @param {Boolean} state
- */
-export async function toggleSpinningCircle(that, state) {
+
+export async function toggleSpinningCircle(that: EventTarget, state: boolean): Promise<void> {
   console.log("...");
-  emitCustomEvent(that, eventNames.TOGGLE_SPINNING_CIRCLE.description, {
+  emitCustomEvent(that, eventNames.TOGGLE_SPINNING_CIRCLE.description!, {
     bubbles: true,
     composed: true,
     state: state
   });
 }
-/**
- *
- * @param {HTMLElement} that
- * @param {String} targetUrl
- */
-export async function emitNavigationEvent(that, targetUrl, stateData) {
-  emitCustomEvent(that, eventNames.NAVIGATE.description, {
+
+export async function emitNavigationEvent(that: EventTarget, targetUrl: string, stateData?: unknown): Promise<void> {
+  emitCustomEvent(that, eventNames.NAVIGATE.description!, {
     bubbles: true,
     composed: true,
     target: targetUrl,
     stateData: stateData
   });
 }
-/**
- *
- * @param {HTMLElement} that
- * @param {String} webComponent
- * @param {JSON} data
- * @param {function} confirmCb
- * @param {function} cancelCb
- */
-export async function emitDialogEvent(that, webComponent, data, confirmCb, cancelCb) {
-  emitCustomEvent(that, eventNames.DIALOG_OPEN.description, {
+
+export async function emitDialogEvent(that: EventTarget, webComponent: string, data: object, confirmCb?: Function, cancelCb?: Function): Promise<void> {
+  emitCustomEvent(that, eventNames.DIALOG_OPEN.description!, {
     bubbles: true,
     composed: true,
     element: webComponent,
@@ -392,26 +311,23 @@ export async function emitDialogEvent(that, webComponent, data, confirmCb, cance
     cancelCb: cancelCb
   });
 }
-export async function emitDialogConfirmEvent(that, data) {
-  emitCustomEvent(that, eventNames.DIALOG_CONFIRM.description, {
+export async function emitDialogConfirmEvent(that: EventTarget, data: unknown): Promise<void> {
+  emitCustomEvent(that, eventNames.DIALOG_CONFIRM.description!, {
     bubbles: true,
     composed: true,
     data: data
   });
 }
-export async function emitDialogCancelEvent(that) {
-  emitCustomEvent(that, eventNames.DIALOG_CANCEL.description, {
+export async function emitDialogCancelEvent(that: EventTarget): Promise<void> {
+  emitCustomEvent(that, eventNames.DIALOG_CANCEL.description!, {
     bubbles: true,
     composed: true
   });
 }
-/**
- * @param {HTMLElement} that
- * @param {String} route
- */
-export async function emitSubPageContainerEvent(that, route) {
+
+export async function emitSubPageContainerEvent(that: EventTarget, route: string): Promise<void> {
   setTimeout(() => {
-    emitCustomEvent(that, eventNames.SUB_PAGE_CONTAINER.description, {
+    emitCustomEvent(that, eventNames.SUB_PAGE_CONTAINER.description!, {
       bubbles: true,
       composed: true,
       container: that,
@@ -424,13 +340,7 @@ export async function emitSubPageContainerEvent(that, route) {
 ///   CSS   ///
 ///////////////
 
-/**
- *
- * @param {HTMLElement} element
- * @param {String} cssProperty
- * @returns
- */
-export function getNumberFromPixelValue(element, cssProperty) {
+export function getNumberFromPixelValue(element: HTMLElement, cssProperty: string): number {
   const style = getComputedStyle(element);
   const size = style.getPropertyValue(cssProperty);
   let len = size.length;

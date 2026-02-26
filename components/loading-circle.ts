@@ -15,6 +15,8 @@ template.innerHTML = /*html*/`
 `;
 
 class LoadingCircle extends HTMLElement {
+  private _shadow: ShadowRoot;
+
   constructor() {
     super();
     this._shadow = this.attachShadow({ mode: 'closed' });
@@ -26,10 +28,10 @@ class LoadingCircle extends HTMLElement {
   get customStyles() { return this.getAttribute('custom-styles'); }
   get lang() { return this.getAttribute("lang"); }
 
-  set customStyles(value) { this.setAttribute('custom-styles', value); }
-  set lang(value) { this.setAttribute("lang", value); }
+  set customStyles(value: string | null) { this.setAttribute('custom-styles', value!); }
+  set lang(value: string | null) { this.setAttribute("lang", value!); }
 
-  attributeChangedCallback(property, oldValue, newValue) {
+  attributeChangedCallback(property: string, oldValue: string, newValue: string) {
     if (oldValue === newValue) return;
     switch(property) {
       case 'custom-styles':
@@ -37,17 +39,11 @@ class LoadingCircle extends HTMLElement {
         break;
     }
   }
-    connectedCallback() {
-    // Triggered when the component is added to the DOM.
+  connectedCallback() {
   }
   disconnectedCallback() {
-    // Triggered when the component is removed from the DOM.
-    // Ideal place for cleanup code.
-    // Note that when destroying a component, it is good to also release any listeners.
   }
   adoptedCallback() {
-    // Triggered when the element is adopted through `document.adoptElement()` (like when using an <iframe/>).
-    // Note that adoption does not trigger the constructor again.
   }
   _loadCustomStyleSheet() {
     if (!this.customStyles) return;

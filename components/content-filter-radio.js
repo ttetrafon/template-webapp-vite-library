@@ -1,11 +1,14 @@
-import styles from '../styles/style.css?inline';
+import styles from '../../styles/style.css?inline';
+import defaultStyles from '../styles/---.css?inline';
+import { clearChildren } from '../helper/dom';
 
-const _name = 'my-component';
+const _name = 'content-filter-radio';
 const template = document.createElement('template');
 
 template.innerHTML = /*html*/`
 <style>
   ${ styles }
+  ${ defaultStyles }
 
   :host {
     display: block;
@@ -13,7 +16,7 @@ template.innerHTML = /*html*/`
   }
 </style>
 
-<div>...</div>
+
 `;
 
 class Component extends HTMLElement {
@@ -26,14 +29,16 @@ class Component extends HTMLElement {
   }
 
   // Attributes need to be observed to be tied to the lifecycle change callback.
-  static get observedAttributes() { return ['label', 'data']; }
+  static get observedAttributes() { return ['group-id', 'data', 'custom-styles']; }
 
   // Attribute values are always strings, so we need to convert them in their getter/setters as appropriate.
+  get customStyles() { return this.getAttribute('custom-styles'); }
   get data() { return JSON.parse(this.getAttribute('data')); }
-  get label() { return this.getAttribute('label'); }
+  get groupId() { return this.getAttribute('group-id'); }
 
+  set customStyles(value) { this.setAttribute('custom-styles', value); }
   set data(value) { this.setAttribute('data', value); }
-  set label(value) { this.setAttribute('label', value); }
+  set groupId(value) { this.setAttribute('group-id', value); }
 
   // A web component implements the following lifecycle methods.
   /**
@@ -47,6 +52,32 @@ class Component extends HTMLElement {
     // console.log(`--> attributeChangedCallback(${name}, ${JSON.stringify(oldVal)}, ${JSON.stringify(newVal)})`);
     if (oldVal == newVal) return;
     switch (name) {
+      case 'custom-styles':
+        this._loadCustomStyleSheet();
+        break;
+      case 'data':
+        clearChildren(this._shadow);
+
+        let d = this.data;
+        console.log("d:", d);
+        for (let i = 0; i < d.length; i++) {
+          let div = document.createElement("div");
+
+          let input = document.createElement("input");
+          input.setAttribute("type", "radio");
+          input.setAttribute("id", d[i].id);
+          input.setAttribute("name", this.groupId);
+          input.setAttribute("value", d[i].id);
+          div.appendChild(input);
+
+          let label = document.createElement("label");
+          label.setAttribute("for", d[i].id);
+          label.innerText = d[i].display;
+          div.appendChild(label);
+
+          this._shadow.appendChild(div);
+        }
+        break;
     }
   }
   /**
@@ -66,6 +97,18 @@ class Component extends HTMLElement {
    * Note that adoption does not trigger the constructor again.
    */
   adoptedCallback() {
+  }
+  _loadCustomStyleSheet() {
+    if (!this.customStyles) return;
+
+    try {
+      const linkElement = document.createElement('link');
+      linkElement.setAttribute('rel', 'stylesheet');
+      linkElement.setAttribute('href', this.customStyles);
+
+      this._shadow.appendChild(linkElement);
+    }
+    catch (err) { }
   }
 }
 

@@ -7,8 +7,8 @@ const template = document.createElement('template');
 
 template.innerHTML = /*html*/`
 <style>
-  ${ styles }
-  ${ defaultStyles }
+  ${styles}
+  ${defaultStyles}
 
   :host {
     display: block;
@@ -35,7 +35,7 @@ class Component extends HTMLElement {
   get groupId() { return this.getAttribute('group-id'); }
 
   set customStyles(value: string | null) { this.setAttribute('custom-styles', value!); }
-  set data(value: unknown) { this.setAttribute('data', value as string); }
+  set data(value: string) { this.setAttribute('data', value as string); }
   set groupId(value: string | null) { this.setAttribute('group-id', value!); }
 
   attributeChangedCallback(name: string, oldVal: string, newVal: string) {

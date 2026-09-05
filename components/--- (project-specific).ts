@@ -5,7 +5,7 @@ const template = document.createElement('template');
 
 template.innerHTML = /*html*/`
 <style>
-  ${ styles }
+  ${styles}
 
   :host {
     display: block;
@@ -30,7 +30,7 @@ class Component extends HTMLElement {
   get data() { return JSON.parse(this.getAttribute('data')!); }
   get label() { return this.getAttribute('label'); }
 
-  set data(value: unknown) { this.setAttribute('data', value as string); }
+  set data(value: string) { this.setAttribute('data', value); }
   set label(value: string | null) { this.setAttribute('label', value!); }
 
   attributeChangedCallback(name: string, oldVal: string, newVal: string) {

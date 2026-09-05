@@ -67,7 +67,7 @@ class State {
       get(target, prop, receiver) {
         const value = target[prop as string];
         if (value instanceof Function) {
-          return function(...args: unknown[]) {
+          return function (...args: unknown[]) {
             return value.apply(this === receiver ? target : this, args);
           };
         }
@@ -138,7 +138,7 @@ class State {
 
   async publishMessage(url: string, message: unknown, method: symbol): Promise<unknown> {
     // console.log(`---> publishMessage(${url}, ${JSON.stringify(message)})`);
-    switch(this.#gameConnection) {
+    switch (this.#gameConnection) {
       case generalNames.CONNECTION_LIVE:
         console.log("... ws");
         break;
@@ -155,7 +155,7 @@ class State {
     console.log(`---> receiveBroadcastedMessage()`, event);
     let msg = JSON.parse(event.data);
     console.log("msg:", msg);
-    switch(msg.type) {
+    switch (msg.type) {
       case generalNames.BROADCAST_TYPE_REQUEST_STATE.description:
         // if the request is from an older page, ignore it
         if (msg.time < this.#pageRunAt) return;

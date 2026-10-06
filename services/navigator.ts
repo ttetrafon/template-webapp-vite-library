@@ -25,8 +25,8 @@ export class Navigator {
 
     this.$subPageContainers = {};
     this.dialog = document.createElement('dialog');
-    this.$dialogConfirmCallback = async () => {};
-    this.$dialogCancelCallback = async () => {};
+    this.$dialogConfirmCallback = async () => { };
+    this.$dialogCancelCallback = async () => { };
 
     this.init();
   }
@@ -107,11 +107,11 @@ export class Navigator {
 
   createCanonicalUrl(path: string): string {
     // console.log(`---> createCanonicalUrl(${ path })`);
-    return `${ domainRoot }/${ path }`;
+    return `${domainRoot}/${path}`;
   }
 
   createContentElement(content: string): string {
-    return `<${ content }></${ content }>`;
+    return `<${content}></${content}>`;
   }
 
   getRoute(route: string, pathParts: string[]): RouteInfo {
@@ -156,6 +156,7 @@ export class Navigator {
       let route = this.getRoute(part, newPathParts);
       // console.log("...", part, route);
 
+      if (!parentContainer) continue;
       if (part != currentPathParts[i] || !parentContainer.firstChild) {
         // console.log(`... updating part: ${part}`);
         this.updateContent(parentContainer, route.content, route.navData);
